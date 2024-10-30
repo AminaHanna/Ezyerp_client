@@ -1,0 +1,71 @@
+/* .sale-form {
+    padding: 20px;
+    background-color: #e0f7fa;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    margin: 10px 0;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  th {
+    background-color: #4CAF50;
+    color: white;
+  } */
+
+  .sales-form {
+    padding: 20px;
+    background-color: #f0f8ff;
+    border-radius: 8px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .form-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+  }
+  
+  .form-group {
+    flex: 1;
+    margin-right: 10px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .table-section {
+    margin-top: 20px;
+  }
+  
+  .table-section table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .table-section th, .table-section td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: center;
+  }
