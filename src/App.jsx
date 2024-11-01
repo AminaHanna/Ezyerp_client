@@ -20,11 +20,11 @@ import {
 function App() {
   const router = createBrowserRouter([
     {
-      path: "/",
+      path: "/signin",
       element: <SignIn/>,
     },
     {
-      path: "/admin",
+      path: "/",
       element: <PrivateRoute>
                   <Layout/>
                 </PrivateRoute>,

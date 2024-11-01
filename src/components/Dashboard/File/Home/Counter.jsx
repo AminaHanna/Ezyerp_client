@@ -87,11 +87,11 @@ function Counter() {
 
         console.log('Selected Counter:', selectedCounter);
         console.log('Selected Financial Year:', selectedYear);
-        navigate('/admin');
+        navigate('/');
     };
 
     const handleClose = () => {
-        navigate('/');
+        navigate('/signin');
     };
 
     return (

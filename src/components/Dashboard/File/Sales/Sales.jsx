@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
 import SalesTable from "./SalesTable";
+import { CiCirclePlus } from "react-icons/ci";
 import { errorToast } from "../../../External Files/Toast/toast";
 import { fetchCustomers, fetchPriceType, fetchSalesMan } from "../../../External Files/api/api";
 
 function Sales() {
-  const [selected2Value, setSelected2Value] = useState("");
-  const [selected3Value, setSelected3Value] = useState("");
-  const [selected4Value, setSelected4Value] = useState("");
-  const [selected6Value, setSelected6Value] = useState("");
   const [selected7Value, setSelected7Value] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,9 +13,9 @@ function Sales() {
   const [pricetype, setPriceType] = useState([]);
 
 
-
 // ---------customers----------
   const [ selectedCustomer, setSelectedCustomer] = useState('');
+  const [ searchSelectedCustomer, setSearchSelectedCustomer] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [formData, setFormData] = useState({
     customer: '',
@@ -32,8 +29,12 @@ function Sales() {
     code: '',
     invoiceDate: '',
     invoiceTime: '',
-    salesman: "",
-    // ...other fields
+    salesman: '',
+    invoiceNo: '',
+    so_qt: '',
+    type: '',
+    ob_amount: '',
+        // ...other fields
   });
 
   const handleCustomerClick = async () => {
@@ -74,7 +75,6 @@ function Sales() {
   };
 
 
-  useEffect(() => {
     const fetchSalesData = async () => {
       try {
         const data = [
@@ -129,16 +129,15 @@ function Sales() {
       }
     };
   
+
   
+
+
+  useEffect(() => {
     fetchPriceTypeData();
     fetchSalesData();
+    fetchCustomerDetails();
   }, []);
-  
-
-
-  // useEffect(() => {
-  //   fetchCustomers(); // Fetch customers when component mounts
-  // }, []);
 
 
   const handleCustomerChange = (event) => {
@@ -222,22 +221,6 @@ function Sales() {
   });
 
 
-  const handleselect2Change = (event) => {
-    setSelected2Value(event.target.value);
-  };
-
-  const handleselect3Change = (event) => {
-    setSelected3Value(event.target.value);
-  };
-
-  const handleselect4Change = (event) => {
-    setSelected4Value(event.target.value);
-  };
-
-  const handleselect6Change = (event) => {
-    setSelected6Value(event.target.value);
-  };
-
   const handleselect7Change = (event) => {
     setSelected7Value(event.target.value);
   };
@@ -248,15 +231,20 @@ function Sales() {
     console.log(formData);
   };
 
+// search popup item for select items
+  const handleSelectCustomerFromPopup = (customer) => {
+    setSearchSelectedCustomer((prev) => [...prev, customer]);
+    setShowPopup(false); // Close popup after selection
+  };
 
   // ----------------------------
 
-  const exampleData = [
-    { id: 1, gstCode: "GST123", name: "Customer A" },
-    { id: 2, gstCode: "GST456", name: "Customer B" },
-    { id: 3, gstCode: "GST789", name: "Customer C" },
-    // Add more customer data as needed
-  ];
+  // const exampleData = [
+  //   { id: 1, gstCode: "GST123", name: "Customer A" },
+  //   { id: 2, gstCode: "GST456", name: "Customer B" },
+  //   { id: 3, gstCode: "GST789", name: "Customer C" },
+  //   // Add more customer data as needed
+  // ];
 
 
   const handleGSTChange = (e) => {
@@ -267,23 +255,28 @@ function Sales() {
 
     if (value.trim() !== "") {
       setShowPopup(true);
+      filterData(value);
     } else {
       setShowPopup(false);
+      // setFilteredData([]);
     }
   };
 
-  const handleSearchChange = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-
-    // Filter data based on search query
-    const filtered = exampleData.filter(
-      (item) =>
-        item.gstCode.toLowerCase().includes(query.toLowerCase()) ||
-        item.name.toLowerCase().includes(query.toLowerCase())
+  const filterData = (query) => {
+    const filtered = customers.filter(
+      (customer) =>
+        customer.gstno.toLowerCase().includes(query.toLowerCase()) ||
+        customer.label.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredData(filtered);
   };
+
+  const handleSearchInputChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    filterData(query);
+  };
+
 
   const closePopup = () => {
     setShowPopup(false);
@@ -334,7 +327,7 @@ function Sales() {
                 value={selectedCustomer}
                 onClick={handleCustomerClick}
                 onChange={handleCustomerChange}
-                className="border p-1 w-[280px]"
+                className="border p-1 w-[285px] sm:w-[278px]"
               >
                 <option value=""></option>
                 {
@@ -345,14 +338,16 @@ function Sales() {
                   ))
                 }
               </select>
-              +
+              <span className="ml-7 font-bold text-2xl">
+                <CiCirclePlus />
+              </span>
               <input
                 type="text"
                 name=""
                 placeholder=""
                 // value={formData.productName}
                 onChange={handleChange}
-                className="border rounded p-1 sm:ml-3 sm:w-[217px]"
+                className="border rounded p-1 sm:ml-6 w-[225px] sm:w-[241px]"
               />
             </div>
 
@@ -363,75 +358,75 @@ function Sales() {
                 placeholder=""
                 value={formData.address}
                 onChange={handleCustomerChange}
-                className="border rounded p-1 sm:w-[480px]"
+                className="border rounded p-1 w-[208px] sm:w-[480px]"
               />
               <div className="">
-              <label htmlFor="">OB Amount :</label>
+              <label htmlFor="">OB Amount : </label>
               <input
                 type="text"
                 name="OBamount"
                 placeholder="0"
-                value={oldformData.OBamount}
+                value={formData.ob_amount}
                 onChange={handleChange}
-                className="border rounded p-1 text-center w-[110px] sm:w-[150px]"
+                className="border rounded p-1 text-center sm:w-[224px]"
               />
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3 items-center mt-1">
-              <label htmlFor="">Mobile:</label>
+              <label htmlFor="">Mobile: </label>
               <input
                 type="text"
                 name="mobile"
                 placeholder=""
                 value={formData.mobileno}
                 onChange={handleCustomerChange}
-                className="border rounded p-1 sm:w-[160px]"
+                className="border rounded p-1 sm:ml-3 sm:w-[160px]"
               />
               <div className="">
-              <label htmlFor="">GST No:</label>
+              <label htmlFor="">GST No: </label>
               <input
                 type="text"
                 name="gstno"
                 placeholder=""
                 value={formData.gstno}
                 onChange={handleCustomerChange}
-                className="border rounded p-1 sm:w-[160px]"
+                className="border rounded p-1 sm:w-[155px]"
               />
               </div>
               <div className="">
-              <label htmlFor="">GST:</label>
+              <label htmlFor="">GST: </label>
               <input
                 type="text"
                 name="GST"
                 placeholder=""
                 value={formData.gst}
                 onChange={handleCustomerChange}
-                className="border rounded text-center p-1 sm:w-[60px]"
+                className="border rounded text-center p-1 sm:w-[45px]"
               />
               </div>
               <div className="">
-              <label htmlFor="">Invoice No :</label>
+              <label htmlFor="">Invoice No : </label>
               <input
                 type="text"
                 name="invoiceNo"
                 placeholder=""
-                value={oldformData.invoiceNo}
+                value={formData.invoiceNo}
                 onChange={handleChange}
-                className="border rounded p-1 sm:w-[160px]"
+                className="border rounded p-1 sm:w-[233px]"
               />
               </div>
             </div>
             
             <div className="mt-1 flex flex-wrap items-center gap-3">
-            <label htmlFor="GST">GST:</label>
+            {/* <label htmlFor="GST">GST:</label> */}
                 <input
                   type="text"
                   name="code"
                   placeholder="Code/#Name"
                   value={formData.code}
                   onChange={handleGSTChange}
-                  className="border p-3 rounded sm:w-1/2"
+                  className="border p-3 sm:ml-5 rounded sm:w-[535px]"
                 />
                 {/* Popup */}
                 {showPopup && (
@@ -444,23 +439,29 @@ function Sales() {
                           type="text"
                           placeholder="Search..."
                           value={searchQuery}
-                          onChange={handleSearchChange}
+                          onChange={handleSearchInputChange}
+                          // onChange={(e)=> filterData(e.target.value)}
                           className="border rounded-md w-full py-2 px-4 focus:outline-none"
                         />
-                        <div className="mt-4">
+                        <div className="mt-4 max-h-[300px] overflow-y-auto">
                           <table className="w-full border-collapse">
                             <thead>
-                              <tr className="bg-gray-200">
-                                <th className="border p-2">GST Code</th>
-                                <th className="border p-2">Name</th>
+                              <tr className="bg-purple-100">
+                                <th className="border p-2">Item Name</th>
+                                <th className="border p-2">Unit</th>
+                                <th className="border p-2">Batch</th>
+                                <th className="border p-2">MRP</th>
+                                <th className="border p-2">Rate</th>
+                                <th className="border p-2">Stock</th>
+                                <th className="border p-2">Code</th>
                               </tr>
                             </thead>
                             <tbody>
                               {filteredData.length > 0 ? (
                                 filteredData.map((item) => (
-                                  <tr key={item.id} className="border-t">
-                                    <td className="p-2">{item.gstCode}</td>
-                                    <td className="p-2">{item.name}</td>
+                                  <tr key={item.id} className="border-t cursor-pointer" onClick={() => handleSelectCustomerFromPopup(item)}>
+                                    <td className="p-2">{item.label}</td>
+                                    <td className="p-2">{item.gstno}</td>
                                   </tr>
                                 ))
                               ) : (
@@ -476,7 +477,7 @@ function Sales() {
                       </div>
                       <button
                         onClick={closePopup}
-                        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
+                        className="mt-4 px-4 py-2 bg-purple-900 text-white rounded-md hover:bg-purple-500 focus:outline-none"
                       >
                         Close
                       </button>
@@ -486,7 +487,7 @@ function Sales() {
                 {/* ------------------------------------ */}
               <div className="">
                 <div className="">
-                <label className="text-red-500">Invoice Date :</label>
+                <label className="text-red-500">Invoice Date : </label>
                 <input
                   type="date"
                   name="invoiceDate"
@@ -537,7 +538,7 @@ function Sales() {
               <label htmlFor="termsOfDelivery">Tax</label>
             </div>
             <div className="flex gap-4 items-center">
-              <label htmlFor="">Sales Man:</label>
+              <label htmlFor="">Sales Man: </label>
               <select
                 name="salesman"
                 value={formData.salesman}
@@ -558,28 +559,36 @@ function Sales() {
             <div className="flex gap-2 items-center mt-2">
               <label htmlFor="">Checked By:</label>
               <select
-                value={selected2Value}
-                onChange={handleselect2Change}
+                value={formData.salesman}
+                onChange={handleChange}
                 className="border"
               >
                 {/* <option value="">--Choose an option--</option> */}
-                <option value="option1">Super Admin</option>
-                <option value="option2">Option 2</option>
-                <option value="option3">Option 3</option>
+                {
+                  salesman.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))
+                }
               </select>
             </div>
 
             <div className="flex gap-3 items-center mt-2">
               <label htmlFor="">Created By:</label>
               <select
-                value={selected3Value}
-                onChange={handleselect3Change}
+                value={formData.salesman}
+                onChange={handleChange}
                 className="border"
               >
                 {/* <option value="">--Choose an option--</option> */}
-                <option value="option1">Super Admin</option>
-                <option value="option2">Option 2</option>
-                <option value="option3">Option 3</option>
+                {
+                  salesman.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))
+                }
               </select>
             </div>
           </div>
@@ -590,8 +599,8 @@ function Sales() {
                 Type :
               </label>
               <select
-                value={selected4Value}
-                onChange={handleselect4Change}
+                value={formData.value}
+                onChange={handleChange}
                 className="border"
               >
                 <option value="option1">GST</option>
@@ -601,11 +610,11 @@ function Sales() {
             </div>
 
             <div className="mt-1">
-              <label htmlFor="">Price Type :</label>
+              <label htmlFor="">Price Type : </label>
               <select
                 value={formData.pricetype}
                 onChange={handleChange}
-                className="border w-[140px]"
+                className="border w-[152px]"
               >
                 {
                   pricetype.map((item) => (
@@ -631,22 +640,22 @@ function Sales() {
             <div className=" mt-1">
               <label htmlFor="">SO/QT No: </label>
               <select
-                value={selected6Value}
-                onChange={handleselect6Change}
+                value={formData.value}
+                onChange={handleChange}
                 className="border"
               >
                 <option value="option1">SO</option>
                 <option value="option2">QT</option>
-                <option value="option3">Option 3</option>
+                <option value="option3">DS</option>
               </select>
-              {/* <input
+              <input
                 type="text"
                 name="so_qt_no"
                 placeholder=""
                 value={formData.so_qt_no}
                 onChange={handleChange}
-                className="border rounded"
-              /> */}
+                className="border rounded ml-1 px-1 w-[110px] sm:w-[108px]"
+              />
             </div>
           </div>
         </div>
@@ -654,7 +663,10 @@ function Sales() {
         </div>
 
         <div className="">
-          <SalesTable customers={customers} />
+          {/* <SalesTable customers={customers} /> */}
+          {/* pass selected customers from search popup menu */}
+          <SalesTable searchSelectedCustomer={searchSelectedCustomer} />
+          {/* {searchSelectedCustomer && <SalesTable searchSelectedCustomer={searchSelectedCustomer}/>} */}
         </div>
 
           <div className="">
@@ -668,7 +680,7 @@ function Sales() {
 
                 <div className="px-2">
                   <div className="flex flex-wrap mt-1 gap-5 justify-between">
-                    <div className="sm:pl-5">
+                    <div className="pl-8 sm:pl-5">
                       <label htmlFor="">Payment Type : </label>
                       <select
                         value={selected7Value}

@@ -48,3 +48,7 @@ export const fetchSalesMan = (data) => {
 export const fetchPriceType = (data) => {
     return postRequest('PriceType.php', data);
 };
+
+export const fetchSalesItems = (data) => {
+    return postRequest('salesitems.php', data);
+};

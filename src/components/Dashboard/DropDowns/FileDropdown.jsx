@@ -44,7 +44,7 @@ function FileDropdown() {
                     </li>
                   </Link>
 
-                  <Link to={"/"}>
+                  <Link to={"/signin"}>
                     <li
                     className="py-1 px-5 transition-all duration-300 hover:text-purple-700 cursor-pointer"
                     onMouseEnter={() => setHovered(true)}

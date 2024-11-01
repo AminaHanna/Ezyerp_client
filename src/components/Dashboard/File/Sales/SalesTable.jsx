@@ -1,37 +1,57 @@
 import React from 'react';
 
-function SalesTable({ customers }) {
+function SalesTable({ searchSelectedCustomer }) {
   return (
     <div className="max-w-screen-2xl mx-auto bg-white rounded shadow-md">
       <div className="overflow-x-auto h-[360px]">
         <table className="min-w-full border-collapse border border-gray-200">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border border-gray-200 px-4 py-2">Customer ID</th>
-              <th className="border border-gray-200 px-4 py-2">Name</th>
-              <th className="border border-gray-200 px-4 py-2">Address</th>
-              <th className="border border-gray-200 px-4 py-2">Mobile No.</th>
-              <th className="border border-gray-200 px-4 py-2">GST No.</th>
-              <th className="border border-gray-200 px-4 py-2">Remarks</th>
-              <th className="border border-gray-200 px-4 py-2">Opening Invoice</th>
-              <th className="border border-gray-200 px-4 py-2">Area</th>
-              <th className="border border-gray-200 px-4 py-2">Amount</th>
+              <th className="border border-gray-200 w-14 py-2 font-semibold">SI NO</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Code</th>
+              <th className="border border-gray-200 px-4 w-[300px] py-2 font-semibold">Item Name</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">HSN/SAC</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Tax</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Unit</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">MRP</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Unit Price</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Qty</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Disc%</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Disc Amt</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Total</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">GST</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Total Amount</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Stock</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">?</th>
+              <th className="border border-gray-200 px-4 py-2 font-semibold">Tamt</th>
             </tr>
           </thead>
           <tbody>
-            {customers.map((customer, index) => (
-              <tr key={index}>
-                <td className="border border-gray-200 px-4 py-2">{customer.customerid}</td>
-                <td className="border border-gray-200 px-4 py-2">{customer.customer_name}</td>
-                <td className="border border-gray-200 px-4 py-2">{customer.address}</td>
-                <td className="border border-gray-200 px-4 py-2">{customer.mobileno}</td>
-                <td className="border border-gray-200 px-4 py-2">{customer.gstno}</td>
-                <td className="border border-gray-200 px-4 py-2">{customer.remarks}</td>
-                <td className="border border-gray-200 px-4 py-2">{customer.openinginv}</td>
-                <td className="border border-gray-200 px-4 py-2">{customer.area_name}</td>
-                <td className="border border-gray-200 px-4 py-2">{customer.amount}</td>
+            {searchSelectedCustomer.map((item, index) => {
+              return (
+                <>
+                <tr key={index}>
+                <td className="border border-gray-200 px-4 py-2">{index+1}</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">{item.label}</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">..</td>
               </tr>
-            ))}
+                </>
+              )
+            })}
           </tbody>
         </table>
       </div>
