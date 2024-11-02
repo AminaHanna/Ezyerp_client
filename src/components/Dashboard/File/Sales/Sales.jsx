@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import SalesTable from "./SalesTable";
 import { CiCirclePlus } from "react-icons/ci";
 import { errorToast } from "../../../External Files/Toast/toast";
-import { fetchCustomers, fetchPriceType, fetchSalesMan } from "../../../External Files/api/api";
+import { fetchCustomers, fetchPriceType, fetchSalesItems, fetchSalesMan } from "../../../External Files/api/api";
 
 function Sales() {
   const [selected7Value, setSelected7Value] = useState("");
@@ -11,6 +11,7 @@ function Sales() {
   const [filteredData, setFilteredData] = useState([]);
   const [salesman, setSalesMan] = useState([]);
   const [pricetype, setPriceType] = useState([]);
+  const [column, setColumn] = useState(0);
 
 
 // ---------customers----------
@@ -128,15 +129,83 @@ function Sales() {
         errorToast('An error occurred while fetching pricetype data');
       }
     };
-  
+
 
   
+const searchSalesItems = async (query) => {
+  let columnValue;
+  let formattedQuery;
+
+  // if (query.trim() === "") {
+  //   columnValue = 0;
+  //   formattedQuery = "";
+  // } else if (query.startsWith("#") && query.length > 1) {
+  //   columnValue = 1;
+  //   formattedQuery = `%${query.slice(1)}%`;
+  // } else if (query.startsWith("$") && query.length > 1) {
+  //   columnValue = 0;
+  //   formattedQuery = `${query.slice(1)}%`;
+  // } else {
+  //   columnValue = 2;
+  //   formattedQuery = `%${query}%`;
+  //   // console.log("No Datas");
+  // }
+  if(query.startsWith("$"))
+    {
+      let qty=query.slice(6)/1000;
+      let barcode=query.slice(1,6);
+      console.log(qty, barcode);
+      columnValue=2;
+      formattedQuery=barcode;
+    }
+    else if(query.startsWith("#"))
+    {
+      let qty=1;
+      let barcode=query.slice(1);
+      console.log(qty, barcode);
+      columnValue=1;
+      formattedQuery=barcode;
+    } 
+    else {
+      let qty=1;
+      let barcode=query;
+      console.log(qty, barcode);
+      columnValue=1;
+      formattedQuery=barcode;
+    }
+  setColumn(columnValue);
+  
+
+    const data = [
+      { key: "officeid", value: "1" },
+      { key: "officecode", value: "RD01" },
+      { key: "financialyearid", value: "1" },
+      { key: "column", value: columnValue },
+      { key: "barcode", value: formattedQuery }
+    ];
+
+    console.log("Formatted data for API call:", data);
+
+    try {
+      const result = await fetchSalesItems(data);
+      if (result.flag) {
+        setFilteredData(result.salesitems);
+      } else {
+        setFilteredData([]);
+        errorToast("No data found");
+      }
+    } catch (err) {
+      console.error("Error fetching data in searchSalesItems:", err.message);
+      errorToast("No Datas Found");
+    }
+};
 
 
   useEffect(() => {
     fetchPriceTypeData();
     fetchSalesData();
     fetchCustomerDetails();
+    fetchSalesItems();
   }, []);
 
 
@@ -237,14 +306,6 @@ function Sales() {
     setShowPopup(false); // Close popup after selection
   };
 
-  // ----------------------------
-
-  // const exampleData = [
-  //   { id: 1, gstCode: "GST123", name: "Customer A" },
-  //   { id: 2, gstCode: "GST456", name: "Customer B" },
-  //   { id: 3, gstCode: "GST789", name: "Customer C" },
-  //   // Add more customer data as needed
-  // ];
 
 
   const handleGSTChange = (e) => {
@@ -255,7 +316,9 @@ function Sales() {
 
     if (value.trim() !== "") {
       setShowPopup(true);
-      filterData(value);
+      // filterData(value);
+    
+      searchSalesItems(value);
     } else {
       setShowPopup(false);
       // setFilteredData([]);
@@ -271,11 +334,12 @@ function Sales() {
     setFilteredData(filtered);
   };
 
-  const handleSearchInputChange = (e) => {
+  const handleSearchInputChange = useCallback((e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    filterData(query);
-  };
+    // filterData(query);
+    searchSalesItems(query);
+  }, [searchSalesItems]);
 
 
   const closePopup = () => {
@@ -457,20 +521,30 @@ function Sales() {
                               </tr>
                             </thead>
                             <tbody>
-                              {filteredData.length > 0 ? (
-                                filteredData.map((item) => (
-                                  <tr key={item.id} className="border-t cursor-pointer" onClick={() => handleSelectCustomerFromPopup(item)}>
-                                    <td className="p-2">{item.label}</td>
-                                    <td className="p-2">{item.gstno}</td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td className="p-2 text-center" colSpan="2">
-                                    No results found
-                                  </td>
+                            {filteredData.length > 0 ? (
+                              filteredData.map((item, index) => (
+                                <tr
+                                  key={`${item.productid}-${index}`}
+                                  className="border-t cursor-pointer"
+                                  onClick={() => {
+                                    handleSelectCustomerFromPopup(item);
+                                    setShowPopup(false);
+                                  }}
+                                >
+                                  <td className="p-2">{item.eancode}</td>
+                                  <td className="p-2">{item.unit}</td>
+                                  <td className="p-2">{item.batch_name}</td>
+                                  <td className="p-2">{item.mrp}</td>
+                                  <td className="p-2">{item.min_rate}</td>
+                                  <td className="p-2">{item.total_stock}</td>
+                                  <td className="p-2">{item.barcode}</td>
                                 </tr>
-                              )}
+                              ))
+                            ) : (
+                              <tr>
+                                <td className="p-2 text-center" colSpan="7">No results found</td>
+                              </tr>
+                            )}
                             </tbody>
                           </table>
                         </div>

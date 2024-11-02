@@ -32,20 +32,20 @@ function SalesTable({ searchSelectedCustomer }) {
                 <>
                 <tr key={index}>
                 <td className="border border-gray-200 px-4 py-2">{index+1}</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">{item.label}</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">{item.productid}</td>
+                <td className="border border-gray-200 px-4 py-2">{item.product_name}</td>
+                <td className="border border-gray-200 px-4 py-2">{item.hsn_sac}</td>
+                <td className="border border-gray-200 px-4 py-2">{item.taxrate}</td>
+                <td className="border border-gray-200 px-4 py-2">{item.unit}</td>
+                <td className="border border-gray-200 px-4 py-2">{item.mrp}</td>
+                <td className="border border-gray-200 px-4 py-2">{item.unitid}</td>
+                <td className="border border-gray-200 px-4 py-2">qty</td>
+                <td className="border border-gray-200 px-4 py-2">Disc%</td>
+                <td className="border border-gray-200 px-4 py-2">disc amt</td>
                 <td className="border border-gray-200 px-4 py-2">..</td>
                 <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">{item.total_stock}</td>
+                <td className="border border-gray-200 px-4 py-2">{item.neg_stock}</td>
                 <td className="border border-gray-200 px-4 py-2">..</td>
                 <td className="border border-gray-200 px-4 py-2">..</td>
               </tr>
