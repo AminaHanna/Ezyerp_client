@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import SalesTable from "./SalesTable";
 import { CiCirclePlus } from "react-icons/ci";
 import { errorToast } from "../../../External Files/Toast/toast";
-import { fetchCustomers, fetchPriceType, fetchSalesItems, fetchSalesMan } from "../../../External Files/api/api";
+import { fetchCustomers, fetchPriceType, fetchSalesItems, fetchSalesMan, loginUser } from "../../../External Files/api/api";
 
 function Sales() {
   const [selected7Value, setSelected7Value] = useState("");
@@ -11,8 +11,28 @@ function Sales() {
   const [filteredData, setFilteredData] = useState([]);
   const [salesman, setSalesMan] = useState([]);
   const [pricetype, setPriceType] = useState([]);
+  const [billTypes, setBillTypes] = useState([]);
+  const [selectedBillType, setSelectedBillType] = useState("");
   const [column, setColumn] = useState(0);
 
+  //---------------------
+  const [totalMRP, setTotalMRP] = useState(0);
+  const [totalGST, setTotalGST] = useState(0);
+  const [netTotal, setNetTotal] = useState(0);
+  const [roundedNetTotal, setRoundedNetTotal] = useState(0);
+
+  const handleTotalMRPChange = (newTotalMRP) => {
+    setTotalMRP(newTotalMRP);
+  };
+
+  const handleTotalGSTChange = (newTotalGST) => {
+    setTotalGST(newTotalGST);
+  };
+
+  const handleNetTotalChange = (newNetTotal) => {
+    setNetTotal(newNetTotal);
+  };
+  //---------------------
 
 // ---------customers----------
   const [ selectedCustomer, setSelectedCustomer] = useState('');
@@ -25,6 +45,7 @@ function Sales() {
     mobileno: '',
     gstno: '',
     gst: '',
+    tax: '',
     remarks: '',
     openinginv: '',
     code: '',
@@ -35,8 +56,14 @@ function Sales() {
     so_qt: '',
     type: '',
     ob_amount: '',
+    bill_type: '',
+    paidAmount: 0,
+    balance: 0,
+    billdiscount: 0,
+    couponamount: 0,
         // ...other fields
   });
+
 
   const handleCustomerClick = async () => {
     // Fetch customers when the select dropdown is clicked
@@ -48,14 +75,7 @@ function Sales() {
   
   const fetchCustomerDetails = async () => {
     try {
-      const datas = [
-        { key: "officeid", value: "1" },
-        { key: "officecode", value: "RD01" },
-        { key: "financialyearid", value: "1" }
-      ];
-     
-
-      const response = await fetchCustomers(datas);
+      const response = await fetchCustomers();
 
         const customersData = response.customers.map(customer => ({
           value: customer.customerid,
@@ -78,13 +98,8 @@ function Sales() {
 
     const fetchSalesData = async () => {
       try {
-        const data = [
-          { key: "officeid", value: "1" },
-          { key: "officecode", value: "RD01" },
-          { key: "financialyearid", value: "1" },
-        ];
         
-        const response = await fetchSalesMan(data); // Ensure fetchSalesMan points to the correct endpoint for pricetype
+        const response = await fetchSalesMan();
         
         console.log('API response for salesman:', response);
   
@@ -105,13 +120,8 @@ function Sales() {
 
     const fetchPriceTypeData = async () => {
       try {
-        const data = [
-          { key: "officeid", value: "1" },
-          { key: "officecode", value: "RD01" },
-          { key: "financialyearid", value: "1" },
-        ];
         
-        const response = await fetchPriceType(data); // Ensure fetchSalesMan points to the correct endpoint for pricetype
+        const response = await fetchPriceType();
         
         console.log('API response for price type:', response);
   
@@ -132,73 +142,87 @@ function Sales() {
 
 
   
-const searchSalesItems = async (query) => {
-  let columnValue;
-  let formattedQuery;
+  const searchSalesItems = async (query) => {
+    let columnValue;
+    let formattedQuery;
 
-  // if (query.trim() === "") {
-  //   columnValue = 0;
-  //   formattedQuery = "";
-  // } else if (query.startsWith("#") && query.length > 1) {
-  //   columnValue = 1;
-  //   formattedQuery = `%${query.slice(1)}%`;
-  // } else if (query.startsWith("$") && query.length > 1) {
-  //   columnValue = 0;
-  //   formattedQuery = `${query.slice(1)}%`;
-  // } else {
-  //   columnValue = 2;
-  //   formattedQuery = `%${query}%`;
-  //   // console.log("No Datas");
-  // }
-  if(query.startsWith("$"))
-    {
-      let qty=query.slice(6)/1000;
-      let barcode=query.slice(1,6);
-      console.log(qty, barcode);
-      columnValue=2;
-      formattedQuery=barcode;
-    }
-    else if(query.startsWith("#"))
-    {
-      let qty=1;
-      let barcode=query.slice(1);
-      console.log(qty, barcode);
-      columnValue=1;
-      formattedQuery=barcode;
-    } 
-    else {
-      let qty=1;
-      let barcode=query;
-      console.log(qty, barcode);
-      columnValue=1;
-      formattedQuery=barcode;
-    }
-  setColumn(columnValue);
-  
 
-    const data = [
-      { key: "officeid", value: "1" },
-      { key: "officecode", value: "RD01" },
-      { key: "financialyearid", value: "1" },
-      { key: "column", value: columnValue },
-      { key: "barcode", value: formattedQuery }
-    ];
-
-    console.log("Formatted data for API call:", data);
-
-    try {
-      const result = await fetchSalesItems(data);
-      if (result.flag) {
-        setFilteredData(result.salesitems);
-      } else {
-        setFilteredData([]);
-        errorToast("No data found");
+    if(query.startsWith("$"))
+      {
+        let qty=query.slice(6)/1000;
+        let barcode=query.slice(1,6);
+        console.log(qty, barcode);
+        columnValue=2;
+        formattedQuery=barcode;
       }
-    } catch (err) {
-      console.error("Error fetching data in searchSalesItems:", err.message);
-      errorToast("No Datas Found");
+      else if(query.startsWith("#"))
+      {
+        let qty=1;
+        let eancode=query.slice(1);
+        console.log(qty, eancode);
+        columnValue=1;
+        // formattedQuery=barcode;
+        formattedQuery=eancode;
+      } 
+      else {
+        let qty=1;
+        let barcode=query;
+        console.log(qty, barcode);
+        columnValue=1;
+        formattedQuery=barcode;
+      }
+    setColumn(columnValue);
+    
+
+      const data = [
+        { key: "officeid", value: "1" },
+        { key: "officecode", value: "RD01" },
+        { key: "financialyearid", value: "1" },
+        { key: "column", value: columnValue },
+        { key: "barcode", value: formattedQuery }
+      ];
+
+      console.log("Formatted data for API call:", data);
+
+      try {
+        const result = await fetchSalesItems(data);
+        if (result.flag && result.salesitems.length > 0) {
+          setFilteredData(result.salesitems);
+        } else {
+          setFilteredData([]);
+          errorToast("No data found");
+        }
+      } catch (err) {
+        console.error("Error fetching data in searchSalesItems:", err.message);
+        setFilteredData([]); //to clear the search results when there is no data
+        errorToast("No Datas Found");
+      }
+  };
+
+  
+  const fetchBillTypes = async () => {
+    try {
+      
+      const response = await loginUser();
+      console.log("Response from loginUser:", response);
+      const billTypeData = response.bill_type || response.employee?.bill_type;
+      
+      if (billTypeData) {
+        const types = billTypeData.split(",").map((type, index) => ({
+          value: index,
+          label: type.trim()
+        }));
+        setBillTypes(types);
+      } else {
+        console.error("Bill types not found in response:", response);
+        errorToast("Failed to fetch bill types.");
+      }
+    } catch (error) {
+      console.error("Error fetching bill types:", error);
+      errorToast("An error occurred while fetching bill types");
     }
-};
+  };
+  
 
 
   useEffect(() => {
@@ -206,6 +230,7 @@ const searchSalesItems = async (query) => {
     fetchSalesData();
     fetchCustomerDetails();
     fetchSalesItems();
+    fetchBillTypes();
   }, []);
 
 
@@ -260,36 +285,6 @@ const searchSalesItems = async (query) => {
   };
 
 
-
-  const [oldformData, setoldFormData] = useState({
-    customer: "",
-    address: "",
-    mobileno: "",
-    GSTno: "",
-    GST: "",
-    OBamount: "",
-    invoiceDate: "",
-    invoiceNo: "",
-    salesman: "",
-    checkedby: "",
-    createdby: "",
-    type: "",
-    tax: "",
-    pricetype: "",
-    remarks: "",
-    so_qt_no: "",
-    payment_type: "",
-    couponamount: "",
-    billdiscount: "",
-    netGST: "",
-    netTotal: "",
-    totalAmount: "",
-    roundoff: "",
-    paidAmount: "",
-    balance: "",
-  });
-
-
   const handleselect7Change = (event) => {
     setSelected7Value(event.target.value);
   };
@@ -307,10 +302,14 @@ const searchSalesItems = async (query) => {
   };
 
 
+  const handleBillTypeChange = (e) => {
+    setSelectedBillType(e.target.value);
+  };
 
-  const handleGSTChange = (e) => {
+
+  const handleCodeChange = (e) => {
     const { value } = e.target;
-    setFormData({ ...formData, code: value }); // Update formData with GST input value
+    setFormData({ ...formData, code: value }); // Update formData with Code input value
     setSearchQuery(value);
     
 
@@ -321,7 +320,7 @@ const searchSalesItems = async (query) => {
       searchSalesItems(value);
     } else {
       setShowPopup(false);
-      // setFilteredData([]);
+      setFilteredData([]);
     }
   };
 
@@ -347,7 +346,25 @@ const searchSalesItems = async (query) => {
     setSearchQuery("");
     setFilteredData([]); // Reset filtered data when closing the popup
   };
-  
+
+// ------balance---------
+  const handleBalanceChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: parseFloat(value) || 0,
+    }));
+  };
+
+  useEffect(() => {
+    setRoundedNetTotal(Math.round(netTotal));
+    const balance = roundedNetTotal - formData.paidAmount;
+    setFormData((prevData) => ({
+      ...prevData,
+      balance: balance >= 0 ? balance : 0,
+    }));
+  }, [netTotal, formData.paidAmount, roundedNetTotal]);
+  // -------------------------------------
 
   return (
     <>
@@ -371,21 +388,6 @@ const searchSalesItems = async (query) => {
                 onChange={handleCustomerChange}
                 className="border rounded p-1"
               />
-              {/* <select
-                id="selectBox"
-                value={selectedCustomer}
-                onClick={handleCustomerClick}
-                onChange={handleCustomerChange}
-                className="border p-1 w-[280px]"
-              >
-                {
-                  customers.map((customer) => (
-                    <option key={customer.value} value={customer.value}>
-                      {customer.label}
-                    </option>
-                  ))
-                }
-              </select> */}
               <select
                 id="selectBox"
                 value={selectedCustomer}
@@ -409,7 +411,6 @@ const searchSalesItems = async (query) => {
                 type="text"
                 name=""
                 placeholder=""
-                // value={formData.productName}
                 onChange={handleChange}
                 className="border rounded p-1 sm:ml-6 w-[225px] sm:w-[241px]"
               />
@@ -432,7 +433,7 @@ const searchSalesItems = async (query) => {
                 placeholder="0"
                 value={formData.ob_amount}
                 onChange={handleChange}
-                className="border rounded p-1 text-center sm:w-[224px]"
+                className="border rounded p-1 sm:w-[224px]"
               />
               </div>
             </div>
@@ -489,7 +490,7 @@ const searchSalesItems = async (query) => {
                   name="code"
                   placeholder="Code/#Name"
                   value={formData.code}
-                  onChange={handleGSTChange}
+                  onChange={handleCodeChange}
                   className="border p-3 sm:ml-5 rounded sm:w-[535px]"
                 />
                 {/* Popup */}
@@ -525,19 +526,20 @@ const searchSalesItems = async (query) => {
                               filteredData.map((item, index) => (
                                 <tr
                                   key={`${item.productid}-${index}`}
-                                  className="border-t cursor-pointer"
+                                  className="border-t cursor-pointer hover:bg-purple-50"
                                   onClick={() => {
                                     handleSelectCustomerFromPopup(item);
                                     setShowPopup(false);
                                   }}
                                 >
-                                  <td className="p-2">{item.eancode}</td>
+                                  <td className="p-2">{item.product_name}</td>
                                   <td className="p-2">{item.unit}</td>
                                   <td className="p-2">{item.batch_name}</td>
                                   <td className="p-2">{item.mrp}</td>
                                   <td className="p-2">{item.min_rate}</td>
                                   <td className="p-2">{item.total_stock}</td>
-                                  <td className="p-2">{item.barcode}</td>
+                                  <td className="p-2">{searchQuery === item.barcode ? item.barcode : item.eancode}</td>
+
                                 </tr>
                               ))
                             ) : (
@@ -575,7 +577,7 @@ const searchSalesItems = async (query) => {
                     type="checkbox"
                     id="tax"
                     name="tax"
-                    value={oldformData.tax}
+                    value={formData.tax}
                     onChange={handleChange}
                     className="border rounded"
                   />
@@ -605,7 +607,7 @@ const searchSalesItems = async (query) => {
                 type="checkbox"
                 id="tax"
                 name="tax"
-                value={oldformData.tax}
+                value={formData.tax}
                 onChange={handleChange}
                 className="border rounded"
               />
@@ -673,13 +675,15 @@ const searchSalesItems = async (query) => {
                 Type :
               </label>
               <select
-                value={formData.value}
-                onChange={handleChange}
+                value={selectedBillType}
+                onChange={handleBillTypeChange}
                 className="border"
               >
-                <option value="option1">GST</option>
-                <option value="option2">Option 2</option>
-                <option value="option3">Option 3</option>
+                {billTypes.map((type) => (
+                  <option key={type.value} value={type.label}>
+                    {type.label}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -739,7 +743,7 @@ const searchSalesItems = async (query) => {
         <div className="">
           {/* <SalesTable customers={customers} /> */}
           {/* pass selected customers from search popup menu */}
-          <SalesTable searchSelectedCustomer={searchSelectedCustomer} />
+          <SalesTable searchSelectedCustomer={searchSelectedCustomer} onTotalMRPChange={handleTotalMRPChange} onTotalGSTChange={handleTotalGSTChange} onNetTotalChange={handleNetTotalChange} />
           {/* {searchSelectedCustomer && <SalesTable searchSelectedCustomer={searchSelectedCustomer}/>} */}
         </div>
 
@@ -761,8 +765,9 @@ const searchSalesItems = async (query) => {
                         onChange={handleselect7Change}
                         className="border sm:w-[200px]"
                       >
-                        <option value="option1">Cash</option>
                         <option value="option2">Credit</option>
+                        <option value="option1">Cash</option>
+                        <option value="option1">UPI</option>
                         <option value="option3">Cheque</option>
                       </select>
                     </div>
@@ -770,11 +775,11 @@ const searchSalesItems = async (query) => {
                     <div className="pr-4">
                       <label htmlFor="">Total Amount : </label>
                       <input
-                        type="number"
                         name="totalAmount"
                         placeholder="0"
-                        value={oldformData.totalAmount}
-                        onChange={handleChange}
+                        value={totalMRP}
+                        readOnly
+                        // onChange={handleChange}
                         className="border rounded px-2 sm:w-[200px]"
                       />
                     </div>
@@ -782,11 +787,10 @@ const searchSalesItems = async (query) => {
                     <div className="">
                       <label htmlFor="">Round Off : </label>
                       <input
-                        type="number"
                         name="roundOff"
                         placeholder="0"
-                        value={oldformData.roundoff}
-                        onChange={handleChange}
+                        value={roundedNetTotal}
+                        // onChange={handleChange}
                         className="border rounded px-2 sm:w-[200px]"
                       />
                     </div>
@@ -797,9 +801,9 @@ const searchSalesItems = async (query) => {
                       <label htmlFor="">Coupon Amount : </label>
                       <input
                         type="number"
-                        name="couponAmount"
+                        name="couponamount"
                         placeholder="0"
-                        value={oldformData.couponamount}
+                        value={formData.couponamount}
                         onChange={handleChange}
                         className="border px-2 rounded sm:w-[200px]"
                       />
@@ -811,8 +815,9 @@ const searchSalesItems = async (query) => {
                         type="number"
                         name="netGST"
                         placeholder="0"
-                        value={oldformData.netGST}
-                        onChange={handleChange}
+                        value={totalGST}
+                        readOnly
+                        // onChange={handleChange}
                         className="border px-2 rounded sm:w-[200px]"
                       />
                     </div>
@@ -823,8 +828,8 @@ const searchSalesItems = async (query) => {
                         type="number"
                         name="paidAmount"
                         placeholder="0"
-                        value={oldformData.paidAmount}
-                        onChange={handleChange}
+                        value={formData.paidAmount}
+                        onChange={handleBalanceChange}
                         className="border px-2 rounded sm:w-[200px]"
                       />
                     </div>
@@ -835,9 +840,9 @@ const searchSalesItems = async (query) => {
                       <label htmlFor="">Bill Discount : </label>
                       <input
                         type="number"
-                        name="billDiscount"
+                        name="billdiscount"
                         placeholder="0"
-                        value={oldformData.billdiscount}
+                        value={formData.billdiscount}
                         onChange={handleChange}
                         className="border px-2 rounded sm:w-[200px]"
                       />
@@ -849,8 +854,9 @@ const searchSalesItems = async (query) => {
                       type="number"
                         name="netTotal"
                         placeholder="0"
-                        value={oldformData.netTotal}
-                        onChange={handleChange}
+                        value={netTotal}
+                        readOnly
+                        // onChange={handleChange}
                         className="border px-2 rounded sm:w-[200px]"
                       />       
                     </div>
@@ -861,8 +867,8 @@ const searchSalesItems = async (query) => {
                         type="number"
                         name="balance"
                         placeholder="0"
-                        value={oldformData.balance}
-                        onChange={handleChange}
+                        value={formData.balance}
+                        onChange={handleBalanceChange}
                         className="border px-2 rounded sm:w-[200px]"
                       />
                     </div>

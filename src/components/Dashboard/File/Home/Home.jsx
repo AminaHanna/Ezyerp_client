@@ -7,7 +7,7 @@ function Home() {
         <h1 className='px-5'>WELLFIT MARKETING AGENCY</h1>
 
         <div className="flex justify-evenly flex-wrap my-5">
-            <div className="w-[250px]  mt-3 rounded-xl p-2 px-2 bg-yellow-200 shadow-xl border">
+            <div className="w-[250px]  mt-3 rounded-xl p-2 px-2 bg-yellow-100 border">
                 <p className='pb-5'>
                     <span>icon</span>
                     <span>Purchase & Return</span>
@@ -22,7 +22,7 @@ function Home() {
                 </p>
             </div>
 
-            <div className="w-[250px] mt-3 rounded-xl p-2 px-2 border bg-red-300">
+            <div className="w-[250px] mt-3 rounded-xl p-2 px-2 border bg-red-100">
                 <p className='pb-5'>
                     <span>icon</span>
                     <span>Sales & Return</span>
@@ -37,7 +37,7 @@ function Home() {
                 </p>
             </div>
 
-            <div className="w-[250px] mt-3 rounded-xl p-2 px-2 border bg-slate-400">
+            <div className="w-[250px] mt-3 rounded-xl p-2 px-2 border bg-slate-100">
                 <p className='pb-5'>
                     <span>icon</span>
                     <span>Income & Receipt</span>
@@ -52,7 +52,7 @@ function Home() {
                 </p>
             </div>
 
-            <div className="w-[250px] mt-3 rounded-xl p-2 px-2 border bg-pink-200">
+            <div className="w-[250px] mt-3 rounded-xl p-2 px-2 border bg-pink-100">
                 <p className='pb-5'>
                     <span>icon</span>
                     <span>Expense & Payment</span>
@@ -67,7 +67,7 @@ function Home() {
                 </p>
             </div>
 
-            <div className="w-[250px] mt-3 rounded-xl p-2 px-2 border bg-orange-100">
+            <div className="w-[250px] mt-3 rounded-xl p-2 px-2 border bg-orange-50">
                 <p className='pb-5'>
                     <span>icon</span>
                     <span>Stock</span>

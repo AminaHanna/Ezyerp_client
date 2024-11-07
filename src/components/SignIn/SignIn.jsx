@@ -20,13 +20,8 @@ function SignIn() {
         e.preventDefault();
         setError('');
     
-        const formdata = [
-            { key: "username", value: username },
-            { key: "password", value: password },
-            { key: "officecode", value: officecode },
-        ];
         try {
-            const response =await loginUser(formdata);
+            const response =await loginUser();
             successToast('Login Succeffull !');
             login();
             navigate('/counter');

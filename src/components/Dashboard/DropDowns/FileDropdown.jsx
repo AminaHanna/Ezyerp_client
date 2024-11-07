@@ -34,7 +34,7 @@ function FileDropdown() {
           {isDropdownVisible && 
             <div className="bg-white w-[200px] shadow-lg transition-all duration-300">
                 <ul className="list-none">
-                  <Link to={"/admin"}>
+                  <Link to={"/"}>
                     <li
                     className="py-1 px-5 transition-all duration-300 hover:text-purple-700 cursor-pointer"
                     onMouseEnter={() => setHovered(true)}

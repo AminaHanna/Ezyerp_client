@@ -1,6 +1,47 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-function SalesTable({ searchSelectedCustomer }) {
+function SalesTable({ searchSelectedCustomer, onTotalMRPChange, onTotalGSTChange, onNetTotalChange }) {
+  const [discounts, setDiscounts] = useState({});
+  const [quantities, setQuantities] = useState({});
+
+  const handleQuantityChange = (productId, qty) => {
+    setQuantities((prevQuantities) => ({
+      ...prevQuantities,
+      [productId]: qty,
+    }));
+  };
+
+  const handleDiscountPercentageChange = (productId, discountPercent, mrp, qty) => {
+    const discountAmt = (discountPercent / 100) * mrp * qty;
+    setDiscounts((prevDiscounts) => ({
+      ...prevDiscounts,
+      [productId]: { percent: discountPercent, amount: discountAmt },
+    }));
+  };
+
+
+  useEffect(() => {
+    let totalMRP = 0;
+    let totalGST = 0;
+    let netTotal = 0;
+
+    searchSelectedCustomer.forEach((item) => {
+      const qty = quantities[item.productid] || 1;
+      const discount = discounts[item.productid] ? discounts[item.productid].amount : 0;
+      const itemTotal = item.mrp * qty;
+      const gst = (item.taxrate / 100) * item.mrp * qty;
+      
+      totalMRP += itemTotal;
+      totalGST += gst;
+      netTotal += itemTotal + gst - discount;
+    });
+
+    onTotalMRPChange(totalMRP);
+    onTotalGSTChange(totalGST);
+    onNetTotalChange(netTotal);
+  }, [searchSelectedCustomer, quantities, discounts, onTotalMRPChange, onTotalGSTChange, onNetTotalChange]);
+
+
   return (
     <div className="max-w-screen-2xl mx-auto bg-white rounded shadow-md">
       <div className="overflow-x-auto h-[360px]">
@@ -28,26 +69,49 @@ function SalesTable({ searchSelectedCustomer }) {
           </thead>
           <tbody>
             {searchSelectedCustomer.map((item, index) => {
+              // Default quantity to 1 if not specified
+              const qty = quantities[item.productid] || 1; // Default quantity to 1
+              const discount = discounts[item.productid] || { percent: 0, amount: 0 };
+               // Calculate GST based on taxrate and mrp
+               const gst = (item.taxrate / 100) * item.mrp * qty;
+               const totalBeforeDiscount = item.mrp * qty;
+               const totalAfterDiscount = totalBeforeDiscount - discount.amount + gst;
+     
+
               return (
                 <>
                 <tr key={index}>
                 <td className="border border-gray-200 px-4 py-2">{index+1}</td>
-                <td className="border border-gray-200 px-4 py-2">{item.productid}</td>
+                <td className="border border-gray-200 px-4 py-2">{item.eancode}</td>
                 <td className="border border-gray-200 px-4 py-2">{item.product_name}</td>
                 <td className="border border-gray-200 px-4 py-2">{item.hsn_sac}</td>
                 <td className="border border-gray-200 px-4 py-2">{item.taxrate}</td>
                 <td className="border border-gray-200 px-4 py-2">{item.unit}</td>
                 <td className="border border-gray-200 px-4 py-2">{item.mrp}</td>
                 <td className="border border-gray-200 px-4 py-2">{item.unitid}</td>
-                <td className="border border-gray-200 px-4 py-2">qty</td>
-                <td className="border border-gray-200 px-4 py-2">Disc%</td>
-                <td className="border border-gray-200 px-4 py-2">disc amt</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">{item.total_stock}</td>
+                <td className="border border-gray-200 px-4 py-2">
+                  <input
+                    type="number"
+                    className="w-[50px]"
+                    value={qty}
+                    onChange={(e) => handleQuantityChange(item.productid, e.target.value)}
+                  />
+                </td>
+                <td className="border border-gray-200 px-4 py-2">
+                  <input
+                    type="number"
+                    className="w-[50px]"
+                    value={discount.percent}
+                    onChange={(e) => handleDiscountPercentageChange(item.productid, e.target.value, item.mrp, qty)}
+                  />
+                </td>
+                <td className="border border-gray-200 px-4 py-2 w-[100px]">{discount.amount.toFixed(2)}</td>
+                <td className="border border-gray-200 px-4 py-2">{totalBeforeDiscount.toFixed(2)}</td>
+                <td className="border border-gray-200 px-4 py-2">{gst.toFixed(2)}</td>
+                <td className="border border-gray-200 px-4 py-2">{totalAfterDiscount.toFixed(2)}</td>
                 <td className="border border-gray-200 px-4 py-2">{item.neg_stock}</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
-                <td className="border border-gray-200 px-4 py-2">..</td>
+                <td className="border border-gray-200 px-4 py-2">...</td>
+                <td className="border border-gray-200 px-4 py-2">{totalAfterDiscount.toFixed(2)}</td>
               </tr>
                 </>
               )

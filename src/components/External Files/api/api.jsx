@@ -25,30 +25,70 @@ const postRequest = async (endpoint, data) => {
     }
 };
 
-export const loginUser = (formData) => {
+export const loginUser = () => {
+    const formData = [
+        { key: "username", value: "admin", type: "text" },
+        { key: "password", value: "admin", type: "text" },
+        { key: "officecode", value: "RD01", type: "text" }
+      ];
     return postRequest('login.php', formData);
 };
 
-export const fetchCounters = (additionalData) => {
-    return postRequest('counterlist.php', additionalData);
+export const fetchCounters = () => {
+    const counterData = [
+        { key: "officecode", value: "RD01", type: "text" },
+        { key: "officeid", value: "1", type: "text" },
+        { key: "employeeid", value: "1", type: "text" },
+        { key: "usertypeid", value: "1", type: "text" }
+      ];
+    return postRequest('counterlist.php', counterData);
 };
 
-export const fetchFinancialYears = (additionalData) => {
+export const fetchFinancialYears = () => {
+    const additionalData = [
+        { key: "officecode", value: "RD01", type: "text" },
+        { key: "officeid", value: "1", type: "text" },
+        { key: "employeeid", value: "1", type: "text" },
+        { key: "usertypeid", value: "1", type: "text" }
+    ];
     return postRequest('financialyears.php', additionalData);
 };
 
-export const fetchCustomers = (data) => {
-    return postRequest('customerlist.php', data);
+export const fetchCustomers = () => {
+    const datas = [
+        { key: "officeid", value: "1" },
+        { key: "officecode", value: "RD01" },
+        { key: "financialyearid", value: "1" }
+      ];
+     
+    return postRequest('customerlist.php', datas);
 }
 
-export const fetchSalesMan = (data) => {
+export const fetchSalesMan = () => {
+    const data = [
+        { key: "officeid", value: "1" },
+        { key: "officecode", value: "RD01" },
+        { key: "financialyearid", value: "1" },
+      ];
     return postRequest('salesman.php', data);
 };
 
-export const fetchPriceType = (data) => {
+export const fetchPriceType = () => {
+    const data = [
+        { key: "officeid", value: "1" },
+        { key: "officecode", value: "RD01" },
+        { key: "financialyearid", value: "1" },
+      ];
     return postRequest('PriceType.php', data);
 };
 
 export const fetchSalesItems = (data) => {
+    // const data = [
+    //     { key: "officeid", value: "1" },
+    //     { key: "officecode", value: "RD01" },
+    //     { key: "financialyearid", value: "1" },
+    //     { key: "column", value: columnValue },
+    //     { key: "barcode", value: formattedQuery }
+    //   ];
     return postRequest('salesitems.php', data);
 };

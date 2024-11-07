@@ -35,14 +35,8 @@ function Counter() {
 
     const loadCounters = async () => {
         try {
-            const additionalData = [
-                { key: "officecode", value: "RD01", type: "text" },
-                { key: "officeid", value: "1", type: "text" },
-                { key: "employeeid", value: "1", type: "text" },
-                { key: "usertypeid", value: "1", type: "text" }
-            ];
-
-            const formData = await fetchCounters(additionalData);
+           
+            const formData = await fetchCounters();
             
                 const countersData = formData.counters.map(counter => ({
                     value: counter.counter_id,
@@ -58,14 +52,8 @@ function Counter() {
 
     const loadFinancialYears = async () => {
         try {
-            const additionalData = [
-                { key: "officecode", value: "RD01", type: "text" },
-                { key: "officeid", value: "1", type: "text" },
-                { key: "employeeid", value: "1", type: "text" },
-                { key: "usertypeid", value: "1", type: "text" }
-            ];
-
-            const formData = await fetchFinancialYears(additionalData);
+            
+            const formData = await fetchFinancialYears();
 
                 const years = formData.financial_years.map(year => ({
                     value: year.financeid,

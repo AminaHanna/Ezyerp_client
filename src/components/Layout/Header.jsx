@@ -16,15 +16,51 @@ import officeIcon from "../External Files/Icons/company.png"
 import timeIcon from "../External Files/Icons/chronometer.png"
 import adminIcon from "../External Files/Icons/admin.png"
 import Navbar from './Navbar'
+import { fetchCounters, loginUser } from '../External Files/api/api'
 
 function Header() {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [counterName, setCounterName] = useState('');
+  const [employeeName, setEmployeeName] = useState('');
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentDateTime(new Date());
     }, 1000);
-    return () => clearInterval(interval); // Cleanup on component unmount
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Fetch employee name and counter details
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const loginResponse = await loginUser();
+
+        if (loginResponse && loginResponse.flag && loginResponse.employee) {
+          setEmployeeName(loginResponse.employee.employee_name);
+        } else {
+          console.error("Employee data not found");
+        }
+
+        const counterResponse = await fetchCounters();
+        if (counterResponse && counterResponse.flag && counterResponse.counters.length > 0) {
+          setCounterName(counterResponse.counters[0].counter_name);
+        } else {
+          console.error("Counter data not found");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
   }, []);
   
 
@@ -62,12 +98,12 @@ function Header() {
 
       <p className='flex'>
         <img className='h-6' src={adminIcon} alt="" />
-        <span className='px-2 border-r-2'>Admin</span>
+        <span className='px-2 border-r-2'>{employeeName}</span>
       </p>
 
       <p className='flex'>
         <img className='h-5' src={officeIcon} alt="" />
-        <span className='px-2 border-r-2'>Office</span>
+        <span className='px-2 border-r-2'>{counterName}</span>
       </p>
 
       <p className='flex'>
