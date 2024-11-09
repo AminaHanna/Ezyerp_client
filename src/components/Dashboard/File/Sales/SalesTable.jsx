@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-function SalesTable({ searchSelectedCustomer, onTotalMRPChange, onTotalGSTChange, onNetTotalChange }) {
-  const [discounts, setDiscounts] = useState({});
+function SalesTable({ searchSelectedCustomer, discounts, onTotalMRPChange, onTotalGSTChange, onNetTotalChange, focusCodeInput }) {
   const [quantities, setQuantities] = useState({});
+  const [discountAmounts, setDiscountAmounts] = useState({});
+  const [discountPercentages, setDiscountPercentages] = useState({});
 
   const handleQuantityChange = (productId, qty) => {
     setQuantities((prevQuantities) => ({
@@ -12,13 +13,16 @@ function SalesTable({ searchSelectedCustomer, onTotalMRPChange, onTotalGSTChange
   };
 
   const handleDiscountPercentageChange = (productId, discountPercent, mrp, qty) => {
-    const discountAmt = (discountPercent / 100) * mrp * qty;
-    setDiscounts((prevDiscounts) => ({
-      ...prevDiscounts,
-      [productId]: { percent: discountPercent, amount: discountAmt },
+    const discountAmt = ((discountPercent / 100) * mrp * qty).toFixed(2);
+    setDiscountPercentages((prevPercentages) => ({
+      ...prevPercentages,
+      [productId]: discountPercent,
+    }));
+    setDiscountAmounts((prevAmounts) => ({
+      ...prevAmounts,
+      [productId]: parseFloat(discountAmt),
     }));
   };
-
 
   useEffect(() => {
     let totalMRP = 0;
@@ -27,20 +31,48 @@ function SalesTable({ searchSelectedCustomer, onTotalMRPChange, onTotalGSTChange
 
     searchSelectedCustomer.forEach((item) => {
       const qty = quantities[item.productid] || 1;
-      const discount = discounts[item.productid] ? discounts[item.productid].amount : 0;
+      const discountPercent = discountPercentages[item.productid] || 
+        (discounts && discounts.disc_perc ? parseFloat(discounts.disc_perc) : parseFloat(discounts.estimatedisc_perc) || 0);
+      const discountAmount = discountAmounts[item.productid] || ((discountPercent / 100) * item.mrp * qty);
       const itemTotal = item.mrp * qty;
       const gst = (item.taxrate / 100) * item.mrp * qty;
+      const totalAfterDiscount = itemTotal - discountAmount;
       
-      totalMRP += itemTotal;
+      totalMRP += totalAfterDiscount;
       totalGST += gst;
-      netTotal += itemTotal + gst - discount;
+      netTotal += itemTotal + gst - discountAmount;
     });
 
     onTotalMRPChange(totalMRP);
     onTotalGSTChange(totalGST);
     onNetTotalChange(netTotal);
-  }, [searchSelectedCustomer, quantities, discounts, onTotalMRPChange, onTotalGSTChange, onNetTotalChange]);
+  }, [searchSelectedCustomer, quantities, discounts, discountPercentages, discountAmounts, onTotalMRPChange, onTotalGSTChange, onNetTotalChange]);
 
+  const qtyRefs = useRef([]);
+  const discRefs = useRef([]);
+
+  useEffect(() => {
+    if (searchSelectedCustomer.length > 0) {
+      const lastIndex = searchSelectedCustomer.length - 1;
+      if (qtyRefs.current[lastIndex]) {
+        qtyRefs.current[lastIndex].focus();
+      }
+    }
+  }, [searchSelectedCustomer]);
+
+  const handleQtyKeyDown = (e, index) => {
+    if (e.key === 'Enter' && discRefs.current[index]) {
+      e.preventDefault();
+      discRefs.current[index].focus();
+    }
+  };
+
+  const handleDiscKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      focusCodeInput();
+    }
+  };
 
   return (
     <div className="max-w-screen-2xl mx-auto bg-white rounded shadow-md">
@@ -69,52 +101,54 @@ function SalesTable({ searchSelectedCustomer, onTotalMRPChange, onTotalGSTChange
           </thead>
           <tbody>
             {searchSelectedCustomer.map((item, index) => {
-              // Default quantity to 1 if not specified
-              const qty = quantities[item.productid] || 1; // Default quantity to 1
-              const discount = discounts[item.productid] || { percent: 0, amount: 0 };
-               // Calculate GST based on taxrate and mrp
-               const gst = (item.taxrate / 100) * item.mrp * qty;
-               const totalBeforeDiscount = item.mrp * qty;
-               const totalAfterDiscount = totalBeforeDiscount - discount.amount + gst;
-     
+              const qty = quantities[item.productid] || 1;
+              const gst = (item.taxrate / 100) * item.mrp * qty;
+              const discountPercent = discountPercentages[item.productid] || 
+                (discounts && discounts.disc_perc ? parseFloat(discounts.disc_perc) : parseFloat(discounts.estimatedisc_perc) || 0);
+              const discountAmount = discountAmounts[item.productid] || (discountPercent / 100) * item.mrp * qty;
+              const totalBeforeDiscount = item.mrp * qty;
+              const totalAfterDiscount = totalBeforeDiscount - discountAmount;
+              const totalGSTandDiscount = totalAfterDiscount + gst;
 
               return (
-                <>
                 <tr key={index}>
-                <td className="border border-gray-200 px-4 py-2">{index+1}</td>
-                <td className="border border-gray-200 px-4 py-2">{item.eancode}</td>
-                <td className="border border-gray-200 px-4 py-2">{item.product_name}</td>
-                <td className="border border-gray-200 px-4 py-2">{item.hsn_sac}</td>
-                <td className="border border-gray-200 px-4 py-2">{item.taxrate}</td>
-                <td className="border border-gray-200 px-4 py-2">{item.unit}</td>
-                <td className="border border-gray-200 px-4 py-2">{item.mrp}</td>
-                <td className="border border-gray-200 px-4 py-2">{item.unitid}</td>
-                <td className="border border-gray-200 px-4 py-2">
-                  <input
-                    type="number"
-                    className="w-[50px]"
-                    value={qty}
-                    onChange={(e) => handleQuantityChange(item.productid, e.target.value)}
-                  />
-                </td>
-                <td className="border border-gray-200 px-4 py-2">
-                  <input
-                    type="number"
-                    className="w-[50px]"
-                    value={discount.percent}
-                    onChange={(e) => handleDiscountPercentageChange(item.productid, e.target.value, item.mrp, qty)}
-                  />
-                </td>
-                <td className="border border-gray-200 px-4 py-2 w-[100px]">{discount.amount.toFixed(2)}</td>
-                <td className="border border-gray-200 px-4 py-2">{totalBeforeDiscount.toFixed(2)}</td>
-                <td className="border border-gray-200 px-4 py-2">{gst.toFixed(2)}</td>
-                <td className="border border-gray-200 px-4 py-2">{totalAfterDiscount.toFixed(2)}</td>
-                <td className="border border-gray-200 px-4 py-2">{item.neg_stock}</td>
-                <td className="border border-gray-200 px-4 py-2">...</td>
-                <td className="border border-gray-200 px-4 py-2">{totalAfterDiscount.toFixed(2)}</td>
-              </tr>
-                </>
-              )
+                  <td className="border border-gray-200 px-4 py-2">{index + 1}</td>
+                  <td className="border border-gray-200 px-4 py-2">{item.eancode || item.barcode}</td>
+                  <td className="border border-gray-200 px-4 py-2">{item.product_name}</td>
+                  <td className="border border-gray-200 px-4 py-2">{item.hsn_sac}</td>
+                  <td className="border border-gray-200 px-4 py-2">{item.taxrate}</td>
+                  <td className="border border-gray-200 px-4 py-2">{item.unit}</td>
+                  <td className="border border-gray-200 px-4 py-2">{item.mrp}</td>
+                  <td className="border border-gray-200 px-4 py-2">{item.unitid}</td>
+                  <td className="border border-gray-200 px-4 py-2">
+                    <input
+                      type="number"
+                      className="w-[50px]"
+                      value={qty}
+                      ref={(el) => (qtyRefs.current[index] = el)}
+                      onChange={(e) => handleQuantityChange(item.productid, e.target.value)}
+                      onKeyDown={(e) => handleQtyKeyDown(e, index)}
+                    />
+                  </td>
+                  <td className="border border-gray-200 px-4 py-2 w-[100px]">
+                    <input
+                      type="number"
+                      className="w-[60px]"
+                      value={discountPercent}
+                      ref={(el) => (discRefs.current[index] = el)}
+                      onKeyDown={handleDiscKeyDown}
+                      onChange={(e) => handleDiscountPercentageChange(item.productid, parseFloat(e.target.value) || 0, item.mrp, qty)}
+                    />
+                  </td>
+                  <td className="border border-gray-200 px-4 py-2 w-[100px]">{discountAmount.toFixed(2)}</td>
+                  <td className="border border-gray-200 px-4 py-2">{totalAfterDiscount.toFixed(2)}</td>
+                  <td className="border border-gray-200 px-4 py-2">{gst.toFixed(2)}</td>
+                  <td className="border border-gray-200 px-4 py-2">{totalGSTandDiscount.toFixed(2)}</td>
+                  <td className="border border-gray-200 px-4 py-2">{item.neg_stock}</td>
+                  <td className="border border-gray-200 px-4 py-2">...</td>
+                  <td className="border border-gray-200 px-4 py-2">{totalGSTandDiscount.toFixed(2)}</td>
+                </tr>
+              );
             })}
           </tbody>
         </table>

@@ -92,3 +92,13 @@ export const fetchSalesItems = (data) => {
     //   ];
     return postRequest('salesitems.php', data);
 };
+
+export const fetchCustomerDiscount = (params) => {
+    const data = [
+      { key: "officeid", value: params.officeid },
+      { key: "officecode", value: params.officecode },
+      { key: "customerid", value: params.customerid },
+      { key: "brandid", value: params.brandid }
+    ];
+    return postRequest('customerbranddiscount.php', data);
+  };

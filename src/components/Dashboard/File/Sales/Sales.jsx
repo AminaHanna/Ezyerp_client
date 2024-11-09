@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import SalesTable from "./SalesTable";
 import { CiCirclePlus } from "react-icons/ci";
 import { errorToast } from "../../../External Files/Toast/toast";
-import { fetchCustomers, fetchPriceType, fetchSalesItems, fetchSalesMan, loginUser } from "../../../External Files/api/api";
+import { fetchCustomerDiscount, fetchCustomers, fetchPriceType, fetchSalesItems, fetchSalesMan, loginUser } from "../../../External Files/api/api";
+import { Link } from "react-router-dom";
 
 function Sales() {
-  const [selected7Value, setSelected7Value] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -14,12 +14,21 @@ function Sales() {
   const [billTypes, setBillTypes] = useState([]);
   const [selectedBillType, setSelectedBillType] = useState("");
   const [column, setColumn] = useState(0);
+  const [discounts, setDiscounts] = useState({ disc_perc: "0.00", estimatedisc_perc: "0.00" });
 
   //---------------------
   const [totalMRP, setTotalMRP] = useState(0);
   const [totalGST, setTotalGST] = useState(0);
   const [netTotal, setNetTotal] = useState(0);
   const [roundedNetTotal, setRoundedNetTotal] = useState(0);
+
+  const codeInputRef = useRef(null);
+
+  const focusCodeInput = () => {
+    if (codeInputRef.current) {
+      codeInputRef.current.focus();
+    }
+  };
 
   const handleTotalMRPChange = (newTotalMRP) => {
     setTotalMRP(newTotalMRP);
@@ -142,64 +151,167 @@ function Sales() {
 
 
   
+  // const searchSalesItems = async (query) => {
+  //   let columnValue;
+  //   let formattedQuery;
+
+
+  //   if(query.startsWith("$"))
+  //     {
+  //       let qty=query.slice(6)/1000;
+  //       let barcode=query.slice(1,6);
+  //       console.log(qty, barcode);
+  //       columnValue=2;
+  //       formattedQuery=barcode;
+  //     }
+  //     else if(query.startsWith("#"))
+  //     {
+  //       let qty=1;
+  //       let eancode=query.slice(1);
+  //       console.log(qty, eancode);
+  //       columnValue=1;
+  //       // formattedQuery=barcode;
+  //       formattedQuery=eancode;
+  //     } 
+  //     else {
+  //       let qty=1;
+  //       let barcode=query;
+  //       console.log(qty, barcode);
+  //       columnValue=1;
+  //       formattedQuery=barcode;
+  //     }
+  //   setColumn(columnValue);
+    
+
+  //     const data = [
+  //       { key: "officeid", value: "1" },
+  //       { key: "officecode", value: "RD01" },
+  //       { key: "financialyearid", value: "1" },
+  //       { key: "column", value: columnValue },
+  //       { key: "barcode", value: formattedQuery }
+  //     ];
+
+  //     console.log("Formatted data for API call:", data);
+
+  //     try {
+  //       const result = await fetchSalesItems(data);
+
+
+  //       if (result.flag && result.salesitems.length > 0) {
+  //         const newItem = result.salesitems[0];
+
+  //         // Check if the item already exists in the table
+  //         const exists = searchSelectedCustomer.some(
+  //             (item) => item.productid === newItem.productid
+  //         );
+
+  //         if (exists) {
+  //             errorToast("Item already exists in the table");
+  //         } else {
+  //             // Add item to the table if it's not a duplicate
+  //             setSearchSelectedCustomer((prev) => [...prev, newItem]);
+  //             setFormData((prevData) => ({ ...prevData, code: "" }));
+  //             setShowPopup(false);
+  //         }
+  //     } else {
+  //         setFilteredData([]);
+  //         errorToast("No data found");
+  //     }
+
+  //       // if (result.flag && result.salesitems.length === 1) {
+  //       //   // Directly add the single item found to SalesTable
+  //       //   setSearchSelectedCustomer((prev) => [...prev, result.salesitems[0]]);
+  //       //   setFormData((prevData) => ({ ...prevData, code: "" }));
+  //       //   setShowPopup(false);
+  //       // } else if (result.flag && result.salesitems.length > 1) {
+  //       //   // Multiple items found; show popup with options
+  //       //   setFilteredData(result.salesitems);
+  //       //   setShowPopup(true);
+  //       // }
+  //     } catch (err) {
+  //       console.error("Error fetching data in searchSalesItems:", err.message);
+  //       setFilteredData([]); //to clear the search results when there is no data
+  //       // errorToast("No Datas Found");
+  //     }
+  // };
+
+  
   const searchSalesItems = async (query) => {
+    if (!selectedCustomer) {
+      errorToast("Please select a customer before searching for items.");
+      return;
+    }
     let columnValue;
     let formattedQuery;
 
-
-    if(query.startsWith("$"))
-      {
-        let qty=query.slice(6)/1000;
-        let barcode=query.slice(1,6);
+    if (query.startsWith("$")) {
+        let qty = query.slice(6) / 1000;
+        let barcode = query.slice(1, 6);
         console.log(qty, barcode);
-        columnValue=2;
-        formattedQuery=barcode;
-      }
-      else if(query.startsWith("#"))
-      {
-        let qty=1;
-        let eancode=query.slice(1);
+        columnValue = 2;
+        formattedQuery = barcode;
+    } else if (query.startsWith("#")) {
+        let qty = 1;
+        let eancode = query.slice(1);
         console.log(qty, eancode);
-        columnValue=1;
-        // formattedQuery=barcode;
-        formattedQuery=eancode;
-      } 
-      else {
-        let qty=1;
-        let barcode=query;
+        columnValue = 1;
+        formattedQuery = eancode;
+    } else {
+        let qty = 1;
+        let barcode = query;
         console.log(qty, barcode);
-        columnValue=1;
-        formattedQuery=barcode;
-      }
+        columnValue = 1;
+        formattedQuery = barcode;
+    }
     setColumn(columnValue);
-    
 
-      const data = [
+    const data = [
         { key: "officeid", value: "1" },
         { key: "officecode", value: "RD01" },
         { key: "financialyearid", value: "1" },
         { key: "column", value: columnValue },
-        { key: "barcode", value: formattedQuery }
-      ];
+        { key: "barcode", value: formattedQuery },
+    ];
 
-      console.log("Formatted data for API call:", data);
+    console.log("Formatted data for API call:", data);
 
-      try {
+    try {
         const result = await fetchSalesItems(data);
-        if (result.flag && result.salesitems.length > 0) {
-          setFilteredData(result.salesitems);
-        } else {
-          setFilteredData([]);
-          errorToast("No data found");
-        }
-      } catch (err) {
-        console.error("Error fetching data in searchSalesItems:", err.message);
-        setFilteredData([]); //to clear the search results when there is no data
-        errorToast("No Datas Found");
-      }
-  };
 
-  
+        if (result.flag && result.salesitems.length > 0) {
+            if (result.salesitems.length === 1) {
+                const newItem = result.salesitems[0];
+
+                // Check if the item already exists in the table
+                const exists = searchSelectedCustomer.some(
+                    (item) => item.productid === newItem.productid
+                );
+
+                if (exists) {
+                    errorToast("Item already exists");
+                } else {
+                    // Add item to the table if it's not a duplicate
+                    setSearchSelectedCustomer((prev) => [...prev, newItem]);
+                    setFormData((prevData) => ({ ...prevData, code: "" }));
+                }
+                setShowPopup(false);
+            } else {
+                // Multiple items found; show popup with options
+                setFilteredData(result.salesitems);
+                setShowPopup(true);
+            }
+        } else {
+            setFilteredData([]);
+            errorToast("No data found");
+        }
+    } catch (err) {
+        console.error("Error fetching data in searchSalesItems:", err.message);
+        setFilteredData([]);
+        errorToast("No datas found");
+    }
+};
+
+
   const fetchBillTypes = async () => {
     try {
       
@@ -234,7 +346,7 @@ function Sales() {
   }, []);
 
 
-  const handleCustomerChange = (event) => {
+  const handleCustomerChange = async (event) => {
     const selectedValue = event.target.value;
     setSelectedCustomer(selectedValue);
 
@@ -249,6 +361,33 @@ function Sales() {
       openinginv: selectedCustomerData? selectedCustomerData.openinginv : '',
       //...other fields
     });
+
+
+    // Clear data specific to the previous customer
+    setSearchSelectedCustomer([]);  // Clear selected items for previous customer
+
+    const brandid = searchSelectedCustomer[0]?.brandid || "1";
+
+     // Fetch discount data based on selected customer
+     try {
+      const discountData = await fetchCustomerDiscount({
+        officeid: "1",
+        officecode: "RD01",
+        customerid: selectedValue,
+        brandid: brandid,
+      });
+      if (discountData.flag && discountData.customerbranddiscount.length > 0) {
+        const customerDiscount = discountData.customerbranddiscount[0];
+        setDiscounts({
+          disc_perc: customerDiscount.discount_percent || "0.00", // Use the discount percentage if available
+          estimatedisc_perc: customerDiscount.discount_amount || "0.00", // Use the discount amount if available
+        });
+      } else {
+        setDiscounts({ disc_perc: "0.00", estimatedisc_perc: "0.00" }); // Reset to default if no discount
+      }
+    } catch (error) {
+      console.error("Failed to fetch discount information:", error);
+    }
   };
         
   // -----------------------------------------------------------------
@@ -283,12 +422,6 @@ function Sales() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
-
-  const handleselect7Change = (event) => {
-    setSelected7Value(event.target.value);
-  };
-
   
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -307,32 +440,30 @@ function Sales() {
   };
 
 
+  // const handleCodeChange = (e) => {
+  //   const { value } = e.target;
+  //   setFormData({ ...formData, code: value }); // Update formData with Code input value
+  //   setSearchQuery(value);
+    
+
+  //   if (value.trim() !== "") {
+  //     setShowPopup(true);
+  //     // filterData(value);
+    
+  //     searchSalesItems(value);
+  //   } else {
+  //     setShowPopup(false);
+  //     setFilteredData([]);
+  //   }
+  // };
+
+
   const handleCodeChange = (e) => {
     const { value } = e.target;
     setFormData({ ...formData, code: value }); // Update formData with Code input value
     setSearchQuery(value);
-    
-
-    if (value.trim() !== "") {
-      setShowPopup(true);
-      // filterData(value);
-    
-      searchSalesItems(value);
-    } else {
-      setShowPopup(false);
-      setFilteredData([]);
-    }
   };
-
-  const filterData = (query) => {
-    const filtered = customers.filter(
-      (customer) =>
-        customer.gstno.toLowerCase().includes(query.toLowerCase()) ||
-        customer.label.toLowerCase().includes(query.toLowerCase())
-    );
-    setFilteredData(filtered);
-  };
-
+  
   const handleSearchInputChange = useCallback((e) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -356,15 +487,76 @@ function Sales() {
     }));
   };
 
+  // useEffect(() => {
+  //   setRoundedNetTotal(Math.round(netTotal));
+  //   const balance = roundedNetTotal - formData.paidAmount;
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     balance: balance >= 0 ? balance : 0,
+  //   }));
+  // }, [netTotal, formData.paidAmount, roundedNetTotal]);
+
   useEffect(() => {
-    setRoundedNetTotal(Math.round(netTotal));
-    const balance = roundedNetTotal - formData.paidAmount;
+    const decimalPart = netTotal % 1; // Get the decimal part
+    const roundOffValue = Math.round(decimalPart * 10); // Get the single decimal as an integer
+    setRoundedNetTotal(roundOffValue); // Set this as the round-off value
+  
+    const balance = Math.round(netTotal) - formData.paidAmount;
     setFormData((prevData) => ({
       ...prevData,
       balance: balance >= 0 ? balance : 0,
     }));
-  }, [netTotal, formData.paidAmount, roundedNetTotal]);
+  }, [netTotal, formData.paidAmount]);
   // -------------------------------------
+
+
+  const handleClear = () => {
+    setFormData({
+      customer: '',
+      customer_name: '',
+      address: '',
+      mobileno: '',
+      gstno: '',
+      gst: '',
+      tax: '',
+      remarks: '',
+      openinginv: '',
+      code: '',
+      // invoiceDate: '',
+      // invoiceTime: '',
+      salesman: '',
+      invoiceNo: '',
+      so_qt: '',
+      type: '',
+      ob_amount: '',
+      bill_type: '',
+      paidAmount: 0,
+      balance: 0,
+      billdiscount: 0,
+      couponamount: 0,
+    });
+    setSearchQuery("");
+    setFilteredData([]);
+    setSelectedCustomer("");
+    setSelectedBillType("");
+    setSearchSelectedCustomer([]);
+    setClearTable((prev) => !prev); // Toggle clearTable state to trigger clearing in SalesTable
+  };
+
+
+  const handlecode = (e) => {
+    const { value } = e.target;
+    setFormData({ ...formData, code: value });
+    setSearchQuery(value);
+  
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      e.preventDefault();
+      if (value.trim() !== "") {
+        searchSalesItems(value); // Trigger search without showing popup initially
+      }
+    }
+  };
+
 
   return (
     <>
@@ -429,7 +621,7 @@ function Sales() {
               <label htmlFor="">OB Amount : </label>
               <input
                 type="text"
-                name="OBamount"
+                name="ob_amount"
                 placeholder="0"
                 value={formData.ob_amount}
                 onChange={handleChange}
@@ -491,6 +683,8 @@ function Sales() {
                   placeholder="Code/#Name"
                   value={formData.code}
                   onChange={handleCodeChange}
+                  onKeyDown={handlecode}
+                  ref={codeInputRef}
                   className="border p-3 sm:ml-5 rounded sm:w-[535px]"
                 />
                 {/* Popup */}
@@ -538,8 +732,7 @@ function Sales() {
                                   <td className="p-2">{item.mrp}</td>
                                   <td className="p-2">{item.min_rate}</td>
                                   <td className="p-2">{item.total_stock}</td>
-                                  <td className="p-2">{searchQuery === item.barcode ? item.barcode : item.eancode}</td>
-
+                                  <td className="p-2">{item.barcode || item.eancode}</td>
                                 </tr>
                               ))
                             ) : (
@@ -743,7 +936,7 @@ function Sales() {
         <div className="">
           {/* <SalesTable customers={customers} /> */}
           {/* pass selected customers from search popup menu */}
-          <SalesTable searchSelectedCustomer={searchSelectedCustomer} onTotalMRPChange={handleTotalMRPChange} onTotalGSTChange={handleTotalGSTChange} onNetTotalChange={handleNetTotalChange} />
+          <SalesTable searchSelectedCustomer={searchSelectedCustomer} onTotalMRPChange={handleTotalMRPChange} onTotalGSTChange={handleTotalGSTChange} onNetTotalChange={handleNetTotalChange} discounts={discounts} focusCodeInput={focusCodeInput} />
           {/* {searchSelectedCustomer && <SalesTable searchSelectedCustomer={searchSelectedCustomer}/>} */}
         </div>
 
@@ -761,8 +954,8 @@ function Sales() {
                     <div className="pl-8 sm:pl-5">
                       <label htmlFor="">Payment Type : </label>
                       <select
-                        value={selected7Value}
-                        onChange={handleselect7Change}
+                        value={formData.value}
+                        onChange={handleBillTypeChange}
                         className="border sm:w-[200px]"
                       >
                         <option value="option2">Credit</option>
@@ -913,15 +1106,18 @@ function Sales() {
                     <button
                       type="button"
                       className="bg-purple-900 text-white px-6 py-1 rounded ml-2"
+                      onClick={handleClear}
                     >
                       Clear
                     </button>
-                    <button
-                      type="button"
-                      className="bg-purple-900 text-white px-6 py-1 rounded ml-2"
-                    >
-                      Close
-                    </button>
+                    <Link to="/">
+                      <button
+                        type="button"
+                        className="bg-purple-900 text-white px-6 py-1 rounded ml-2"
+                      >
+                        Close
+                      </button>
+                    </Link>
                   </div>
                 </div>
 
